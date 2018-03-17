@@ -3,6 +3,7 @@ const MongoClient = require('mongodb').MongoClient;
 const dbName = 'weatherApp';
 const url = 'mongodb://localhost:27017';
 const port = 3000;
+const bodyParser = require('body-parser')
 
 // Connect using MongoClient
 MongoClient.connect(url, function(err, client) {
@@ -12,6 +13,13 @@ MongoClient.connect(url, function(err, client) {
 
 	var express = require('express');
 	var app = express();
+	
+	// Parser Setting
+	app.use(bodyParser.json());
+	app.use(bodyParser.urlencoded());
+	// in latest body-parser use like below.
+	app.use(bodyParser.urlencoded({ extended: true }));
+	
 	const locationsCollection = client.db(dbName).collection('locations');
 
 	//Get all locations
@@ -135,6 +143,68 @@ MongoClient.connect(url, function(err, client) {
 		  }
 	});
 
+	// Write 
+	// Create new location
+	app.post('/location', function(req, res){
+		if(!req.body.location || !isValidLatitude(req.body.latitude) || !isValidLongtitude(req.body.longitude)){
+			res.json({error: true, message: 'Invalid POST data'});
+		}else{
+			locationsCollection.findOne({location: req.body.location}, function(err, result){
+				if(err){
+		  			return res.json({error: true})
+		  		}
+
+		  		if(result){
+		  			return res.json({error: true, 'message': 'Location already exists'})
+		  		}
+
+		  		let location = {
+		  			location: req.body.location,
+		  			latitude: req.body.latitude,
+		  			longitude: req.body.longitude,
+		  			measurements: []
+		  		};
+
+		  		locationsCollection.insert(location, function(err){
+		  			if(err){
+			  			return res.json({error: true})
+			  		}else{
+			  			return res.json({error: false})
+			  		}
+		  		});
+			});
+		}
+	});
+
+	// Add data to an existing location
+	app.post('/location/measurements', function(req, res){
+		if(!req.body.location || !req.body.temperature){
+			res.json({error: true, message: 'Invalid POST data'});
+		}else{
+			locationsCollection.findOne({location: req.body.location}, function(err, result){
+				if(err || result == null){
+					return res.json({error: true})
+				}
+
+				// Proceed to add the measurement
+				var measurements = result.measurements;
+				measurements.push({
+					timestamp: req.body.timestamp || +new Date,
+					temperature: req.body.temperature
+				});
+
+				locationsCollection.update({location: req.body.location}, {$set: {measurements: measurements}}, function(err){
+					if(err){
+						return res.json({error: true})
+					}
+
+					return res.json({error: false});
+				});
+			});
+		}
+	})
+
+	
 	app.listen(port, function(){
 		console.log('Web server listening on port ' + port);
 	});
