@@ -16,11 +16,16 @@ MongoClient.connect(url, function(err, client) {
 	
 	// Parser Setting
 	app.use(bodyParser.json());
-	app.use(bodyParser.urlencoded());
 	// in latest body-parser use like below.
 	app.use(bodyParser.urlencoded({ extended: true }));
-	
+	app.use(express.static('public'));
+
 	const locationsCollection = client.db(dbName).collection('locations');
+
+	// Ping
+	app.get('/ping', function(req, res){
+		res.send(200);
+	});
 
 	//Get all locations
 	app.get('/locations', function(req, res){
@@ -143,7 +148,6 @@ MongoClient.connect(url, function(err, client) {
 		  }
 	});
 
-	// Write 
 	// Create new location
 	app.post('/location', function(req, res){
 		if(!req.body.location || !isValidLatitude(req.body.latitude) || !isValidLongtitude(req.body.longitude)){
@@ -204,7 +208,7 @@ MongoClient.connect(url, function(err, client) {
 		}
 	})
 
-	
+
 	app.listen(port, function(){
 		console.log('Web server listening on port ' + port);
 	});
