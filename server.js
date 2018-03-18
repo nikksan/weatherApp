@@ -26,7 +26,7 @@ MongoClient.connect(url, function(err, client) {
 	app.get('/ping', function(req, res){
 		res.sendStatus(200);
 	});
-
+	
 	//Get all locations
 	app.get('/locations', function(req, res){
 	  	if(isObjectEmpty(req.query)){
