@@ -24,7 +24,7 @@ MongoClient.connect(url, function(err, client) {
 
 	// Ping
 	app.get('/ping', function(req, res){
-		res.send(200);
+		res.sendStatus(200);
 	});
 
 	//Get all locations
