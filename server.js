@@ -48,7 +48,7 @@ MongoClient.connect(url, function(err, client) {
 
 		  		res.json({error: false, locations: locations});
 		  	});	
-	  	}else if(isValidLatitude(req.query.latitude) && isValidLongtitude(req.query.longitude) && isValidRadius(req.query.radius)){
+	  	}else if(isValidLatitude(req.query.latitude) && isValidlongitude(req.query.longitude) && isValidRadius(req.query.radius)){
 	  		var latitudeOffset = req.query.radius * 0.000001619593482036009;
 	  		var longitudeOffset = req.query.radius * 0.000003239186964072018;
 
@@ -150,7 +150,7 @@ MongoClient.connect(url, function(err, client) {
 
 	// Create new location
 	app.post('/location', function(req, res){
-		if(!req.body.location || !isValidLatitude(req.body.latitude) || !isValidLongtitude(req.body.longitude)){
+		if(!req.body.location || !isValidLatitude(req.body.latitude) || !isValidlongitude(req.body.longitude)){
 			res.json({error: true, message: 'Invalid POST data'});
 		}else{
 			locationsCollection.findOne({location: req.body.location}, function(err, result){
@@ -179,6 +179,68 @@ MongoClient.connect(url, function(err, client) {
 			});
 		}
 	});
+
+	// Update existing location
+	app.put('/location', function(req, res){
+		if(!req.body.location || !isValidLatitude(req.body.latitude) || !isValidlongitude(req.body.longitude)){
+			res.json({error: true, message: 'Invalid data'});
+		}else{
+			locationsCollection.findOne({location: req.body.location}, function(err, result){
+				if(err){
+		  			return res.json({error: true})
+		  		}
+
+		  		if(!result){
+		  			return res.json({error: true, 'message': 'Location doesnt exist'})
+		  		}
+
+		  		locationsCollection.updateOne(
+		  			{location: req.body.location},
+		  			{
+		  				$set: {
+			  				latitude: req.body.latitude,
+		  					longitude: req.body.longitude,
+			  			}
+		  			},
+		  			{ upsert: true },
+		  			function(err, result){
+		  				
+		  				if(err){
+				  			res.json({error: true})
+				  		}else{
+				  			res.json({error: false})
+				  		}
+		  			}
+		  		)
+			});
+		}
+	});
+
+	// Delete existing location
+	app.delete('/location', function(req, res){
+		if(!req.body.location){
+			res.json({error: true, message: 'Invalid data'});
+		}else{
+			locationsCollection.findOne({location: req.body.location}, function(err, result){
+				if(err){
+		  			return res.json({error: true})
+		  		}
+
+		  		if(!result){
+		  			return res.json({error: true, 'message': 'Location doesnt exist'})
+		  		}
+
+		  		locationsCollection.deleteOne({location: req.body.location}, function(err, result){
+		  			if(err){
+			  			return res.json({error: true})
+			  		}
+
+			  		res.json({error: false})
+		  		})
+			});
+		}
+	});
+
 
 	// Add data to an existing location
 	app.post('/location/measurements', function(req, res){
@@ -223,7 +285,7 @@ function isValidLatitude(lat){
 	return lat && lat >= -90 && lat <= 90; 
 }
 
-function isValidLongtitude(lng){
+function isValidlongitude(lng){
 	return lng && lng >= -180 && lng <= 180; 
 }
 
