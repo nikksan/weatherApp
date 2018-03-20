@@ -52,6 +52,42 @@ var API = {
 			}
 		})
 	},
+	updateLocation: function(data, success, error){
+		$.ajax({
+			url: '/location',
+			type: 'PUT',
+			data: data,
+			dataType: 'json',
+			success: function(data){
+				if(!data.error){
+					success();
+				}else{
+					error(data.message);
+				}
+			},
+			error: function(){
+				error(err.responseText);
+			}
+		})
+	},
+	deleteLocation: function(data, success, error){
+		$.ajax({
+			url: '/location',
+			type: 'DELETE',
+			data: data,
+			dataType: 'json',
+			success: function(data){
+				if(!data.error){
+					success();
+				}else{
+					error(data.message);
+				}
+			},
+			error: function(){
+				error(err.responseText);
+			}
+		})
+	},
 	addMeasurement: function(data, success, error){
 		$.ajax({
 			url: '/location/measurements',
