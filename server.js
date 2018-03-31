@@ -16,7 +16,6 @@ MongoClient.connect(url, function(err, client) {
 	
 	// Parser Setting
 	app.use(bodyParser.json());
-	// in latest body-parser use like below.
 	app.use(bodyParser.urlencoded({ extended: true }));
 	app.use(express.static('public'));
 
@@ -41,8 +40,9 @@ MongoClient.connect(url, function(err, client) {
 		  		for(var key in results){
 		  			locations.push({
 		  				location: results[key].location,
-			  			latitude: results[key].latitude,
-			  			longitude: results[key].longitude
+			  			latitude: parseFloat( results[key].latitude ),
+				  		longitude: parseFloat( results[key].longitude ),
+			  			last_measurement: results[key].measurements.length ? results[key].measurements.pop() : null
 		  			});
 		  		}
 
@@ -73,8 +73,8 @@ MongoClient.connect(url, function(err, client) {
 		  			)
 			  			locations.push({
 			  				location: results[key].location,
-				  			latitude: results[key].latitude,
-				  			longitude: results[key].longitude
+				  			latitude: parseFloat( results[key].latitude ),
+				  			longitude: parseFloat( results[key].longitude )
 			  			});
 		  		}
 
@@ -86,30 +86,7 @@ MongoClient.connect(url, function(err, client) {
 
 	});
 
-	//getet info about a single location
-	/*
-	app.get('/location', function(req, res){
-	  if(!req.query.location){
-	  	res.json({error: true, message: 'You need to supply location parameter.'});
-	  }else{
-	  	locationsCollection.findOne({location: req.query.location}, function(err, result){
-	  		if(err){
-	  			return res.json({error: true})
-	  		}else if(result === null){
-	  			return res.json({error: true, message: 'No such location'})
-	  		}
-
-	  		var location = {
-	  			location: result.location,
-	  			latitude: result.latitude,
-	  			longitude: result.longitude	
-	  		}
-	  		res.json({error: false, location: location});
-	  	});
-	  }
-	});
-	*/
-
+	
 	//Get measurements for single location
 	app.get('/location/measurements', function(req, res){
 		if(!req.query.location){
@@ -164,8 +141,8 @@ MongoClient.connect(url, function(err, client) {
 
 		  		let location = {
 		  			location: req.body.location,
-		  			latitude: req.body.latitude,
-		  			longitude: req.body.longitude,
+		  			latitude: parseFloat(req.body.latitude),
+		  			longitude: parseFloat(req.body.longitude),
 		  			measurements: []
 		  		};
 
