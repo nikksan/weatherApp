@@ -1,4 +1,4 @@
-// API
+// API Object
 var API = {
 	getLocations: function(data, success, error){
 		$.ajax({
@@ -34,6 +34,25 @@ var API = {
 			}
 		})
 	},
+	addSource: function(data, success, error){
+		$.ajax({
+			url: '/source',
+			method: 'POST',
+			data: data,
+			dataType: 'json',
+			success: function(data){
+				if(!data.error){
+					success(data.source);
+				}else{
+					error(data.message);
+				}
+			},
+			error: function(){
+				error(err.responseText);
+			}
+		})
+	}
+	/*
 	addLocation: function(data, success, error){
 		$.ajax({
 			url: '/location',
@@ -106,4 +125,5 @@ var API = {
 			}
 		})
 	}
+	*/
 }

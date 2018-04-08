@@ -35,7 +35,7 @@ db.once('open', function() {
 			try{
 				var source = new Source({url: req.body.url});
 				var record = await source.save();
-				res.json({error: false, record: record})
+				res.json({error: false, source: record})
 			}catch(err){
 				res.json({error: true, message: err.message})
 			}
@@ -144,21 +144,15 @@ db.once('open', function() {
 					}
 				}
 			}
-			continueNextIteration();
 		}catch(err){
 			if(debug){
 				console.log(err);
 			}
-			
-			continueNextIteration(); // fuck it, continue anyways
 		}
 
-		function continueNextIteration(){
-			setTimeout(function(){
-				fetchLocationsLoop(debug)
-			}, interval);
-		}
-		
+		setTimeout(function(){
+			fetchLocationsLoop(debug)
+		}, interval);
 	}
 
 
