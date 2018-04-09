@@ -19,12 +19,12 @@ var API = {
 	},
 	getMeasurements: function(data, success, error){
 		$.ajax({
-			url: '/location/measurements',
+			url: '/locations/measurements',
 			data: data,
 			dataType: 'json',
 			success: function(data){
 				if(!data.error){
-					success(data.measurements);
+					success(data.locations);
 				}else{
 					error(data.message);
 				}

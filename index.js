@@ -1,4 +1,3 @@
-// DB
 const argv = require('yargs').argv;
 const mongoose = require('mongoose');
 const dbUrl = 'mongodb://localhost/weatherApp_v2';
@@ -9,7 +8,7 @@ const app = express();
 const bodyParser = require('body-parser')
 const port = process.env.PORT || 3000;
 const getJSON = require('get-json')
-const interval = argv.interval || 5000;
+const interval = argv.interval || 60000;
 const debug = argv.debug || false;
 
 
@@ -18,7 +17,6 @@ const Source = require("./models/source");
 const Location = require("./models/location");
 
 db.once('open', function() {
-
 	// Parser Setting
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({ extended: true }));
@@ -44,6 +42,7 @@ db.once('open', function() {
 		}
 	});
 
+	// Get Locations and last location
 	app.get('/locations', async function(req, res){
 		var filter = {};
 
@@ -66,42 +65,46 @@ db.once('open', function() {
 			var latitudeOffset = req.query.filter.radius * 0.000001619593482036009;
 			var longitudeOffset = req.query.filter.radius * 0.000003239186964072018;
 
-			filter = { 
-				latitude: { $gte: req.query.filter.latitude - latitudeOffset, $lte: praseFloat(req.query.filter.latitude) + latitudeOffset},
-				longitude: { $gte: req.query.filter.longitude - longitudeOffset, $lte: praseFloat(req.query.filter.longitude) + longitudeOffset}
-			}
+			filter.latitude = { $gte: req.query.filter.latitude - latitudeOffset, $lte: praseFloat(req.query.filter.latitude) + latitudeOffset};
+			filter.longitude = { $gte: req.query.filter.longitude - longitudeOffset, $lte: praseFloat(req.query.filter.longitude) + longitudeOffset};
 		}
 
 		try{
-			var locations = await Location.find(filter, {location: 1, latitude: 1, longitude: 1});
+			var locations = await Location.find(filter, {location: 1, latitude: 1, longitude: 1, 'measurements':{'$slice': -1}});
 			res.json({error: false, locations: locations})
 		}catch(err){
 			res.json({error: true, message: err.message})
 		}
 	});
 
-	app.get('/location/measurements', async function(req, res){
-		if(!req.query.location){
-			return res.json({error: true, message: 'invalid location param'});
-		}
-			
-		try{
-			var location = await Location.findOne({location: req.query.location}, {measurements: 1});
-			if(location){
-				// Filter locations
-				if(req.query.from && req.query.to){
-					req.query.from = parseInt(req.query.from);
-					req.query.to = parseInt(req.query.to);
 
-					location.measurements = location.measurements.filter(function(measurement){
-						return measurement.timestamp >= req.query.from && measurement.timestamp <= req.query.to;
-					})
+	// Get measurements
+	app.get('/locations/measurements', async function(req, res){
+		try{
+			var locations = await Location.find();
+			
+			// could find a classier way, so ended up doing this..
+			if(req.query.from && req.query.to){
+				if(req.query.from > req.query.to){
+					return res.json({error: true, message: 'Interval error, `from` must be less than `to`'})
 				}
 
-				res.json({error: false, measurements: location.measurements})
+				var filtered = [];
+				for(let location of locations){
+					location.measurements = location.measurements.filter(function(measurement){
+						return measurement.timestamp >= req.query.from && measurement.timestamp <= req.query.to
+					})
+					filtered.push(location);
+				}
+				locations = filtered;
+			}
+
+
+			if(locations){
+				res.json({error: false, locations: locations})
 			}else{
-				res.json({error: true, message: 'Error getting location.'})
-			}	
+				res.json({error: true, message: 'Error getting locations.'})
+			}
 		}catch(err){
 			res.json({error: true, message: err.message})
 		}

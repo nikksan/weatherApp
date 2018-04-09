@@ -1,68 +1,164 @@
-var map;
-var mapEl = document.getElementById('map');
-var pins = {};
+var map, mapEl, chartEl;
+var $filterDateStart,
+$filterDateEnd,
+$buttonFilter,
+$sourceInput,
+$buttonAddSource,
+$buttonOpenSourceModal,
+$sourceModal;
 
-$(document).ready(function(){
-	initMap();
-	initChart();
-	initDatepickers();
+$(document).ready( init );
 
-});
-
-function initDatepickers(){
-	$(document).ready(function() {
-		$('#filter-date-start').datepicker();
-	});
-
-	$(document).ready(function() {
-		$('#filter-date-end').datepicker();
-	});
+function init(){
+    cacheDOM();
+    bindEvents();
+    initMap();
+    initChart();
+    initDatepickers();
 }
 
-function initMap(){
-	map = new google.maps.Map(mapEl, {
-		center: { lat: 42.1165671, lng: 24.73678769999999 },
-		zoom: 8
-	});	
+function cacheDOM() {
+    mapEl = document.getElementById('map');
+    chartEl = document.getElementById('chart');
+
+    $filterDateStart = $('#filter-date-start');
+    $filterDateEnd = $('#filter-date-end');
+    $buttonFilter = $('#button-filter-measurements');
+    $sourceInput = $('#source-input')
+    $buttonAddSource = $('#button-add-source');
+    $buttonOpenSourceModal = $('#button-open-source-modal');
+    $sourceModal = $('#source-modal')
 }
 
-function initChart(){
-	google.charts.load('current', {'packages':['corechart', 'line']});
-	google.charts.setOnLoadCallback(drawChart);
+function bindEvents() {
+    $buttonFilter.on('click', handleButtonFilterClick);
+    $buttonAddSource.on('click', handleButtonAddSourceClick)
+    $buttonOpenSourceModal.on('click', handleButtonTriggerSourceModal)
 }
 
-function drawChart() {
-	var data = new google.visualization.DataTable();
-      data.addColumn('number', 'X');
-      data.addColumn('number', 'Dogs');
+function handleButtonTriggerSourceModal() {
+    $sourceModal.modal();
+}
 
-      data.addRows([
-        [0, 0],   [1, 10],  [2, 23],  [3, 17],  [4, 18],  [5, 9],
-        [6, 11],  [7, 27],  [8, 33],  [9, 40],  [10, 32], [11, 35],
-        [12, 30], [13, 40], [14, 42], [15, 47], [16, 44], [17, 48],
-        [18, 52], [19, 54], [20, 42], [21, 55], [22, 56], [23, 57],
-        [24, 60], [25, 50], [26, 52], [27, 51], [28, 49], [29, 53],
-        [30, 55], [31, 60], [32, 61], [33, 59], [34, 62], [35, 65],
-        [36, 62], [37, 58], [38, 55], [39, 61], [40, 64], [41, 65],
-        [42, 63], [43, 66], [44, 67], [45, 69], [46, 69], [47, 70],
-        [48, 72], [49, 68], [50, 66], [51, 65], [52, 67], [53, 70],
-        [54, 71], [55, 72], [56, 73], [57, 75], [58, 70], [59, 68],
-        [60, 64], [61, 60], [62, 65], [63, 67], [64, 68], [65, 69],
-        [66, 70], [67, 72], [68, 75], [69, 80]
-      ]);
+function handleButtonAddSourceClick() {
+    API.addSource({
+        url: $sourceInput.val()
+    }, function() {
+        alert('You succefully added a new source');
+        $sourceInput.val('');
+    }, function(errText) {
+        alert(errText)
+    })
+}
 
-      var options = {
-        hAxis: {
-          title: 'Time'
+
+function handleButtonFilterClick() {
+    if ($filterDateStart.val() && $filterDateEnd.val()) {
+        // Convert to timestamps
+        var dateStartTS = +new Date($filterDateStart.val());
+        var dateEndTS = +new Date($filterDateEnd.val());
+
+
+        API.getMeasurements({from: dateStartTS, to: dateEndTS }, function(locations) {
+            drawMeasurementsChart(locations);
+        }, function(err) {
+            console.log(err);
+        });
+    } else {
+        alert('You have to enter both start and end date.');
+    }
+}
+
+
+function initMap() {
+    // Init map
+    // Center - Lauta
+    map = new google.maps.Map(mapEl, {
+        center: {
+            lat: 42.1381833,
+            lng: 24.7756837
         },
-        vAxis: {
-          title: 'Popularity'
+        zoom: 13
+    });
+
+
+    // Get Locations
+    API.getLocations({}, function(locations) {
+        for (let location of locations) {
+            let marker = new google.maps.Marker({
+                position: {
+                    lat: location.latitude,
+                    lng: location.longitude
+                },
+                map: map,
+                title: location.location
+            });
+
+            let content = location.location;
+
+            // Append last measurement
+            if (location.measurements.length) {
+                content += ' - ' + location.measurements[0].temperature + '°C' + ' taken '+ humanTimeDiff( location.measurements[0].timestamp );
+            }
+
+            let infowindow = new google.maps.InfoWindow({
+                content: content
+            });
+
+            marker.addListener('click', function() {
+                infowindow.open(map, marker);
+            });
         }
-      };
+    })
+}
 
-      var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+function initChart() {
+    google.charts.load('current', {
+        'packages': ['corechart', 'line']
+    });
+}
 
-      chart.draw(data, options);
+function drawMeasurementsChart(locations) {
+    var data = new google.visualization.DataTable();
+    data.addColumn('date', 'Date');
+
+    var rows = [];
+    for(let i = 0; i < locations.length; i++){
+        data.addColumn('number', locations[i].location);
+        for(let j = 0; j < locations[i].measurements.length; j++){
+            rows[j] = rows[j] || [ new Date(locations[i].measurements[j].timestamp) ];
+            rows[j][i+1] = locations[i].measurements[j].temperature;
+        }
+    }
+
+    data.addRows(rows); 
+
+    var chart = new google.visualization.LineChart(chartEl);
+    chart.draw(data);
+}
+
+function initDatepickers() {
+    $filterDateStart.datepicker();
+    $filterDateEnd.datepicker();
 }
 
 
+function humanTimeDiff(timestamp, from){
+    from = from || +new Date;
+
+    let diff = from - timestamp;
+    switch (true) {
+        case (diff < 1000 * 60):
+            return Math.floor(diff / 1000) + ' sec(s) ago';
+        case (diff < 60000 * 60):
+            return Math.floor(diff / 60000) + ' min(s) ago';
+        case (diff < 3600000 * 24):
+            return Math.floor(diff / 3600000) + ' hour(s) ago';
+        case (diff < 86400000 * 31):
+            return Math.floor(diff / 86400000) + ' day(s) ago';
+        case (diff < 2678400000 * 12):
+            return Math.floor(diff / 2678400000) + ' month(s) ago';
+        default:
+            return Math.floor(diff / 32140800000) + ' year(s) ago';
+    }
+}
