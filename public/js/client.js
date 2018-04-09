@@ -5,7 +5,8 @@ $buttonFilter,
 $sourceInput,
 $buttonAddSource,
 $buttonOpenSourceModal,
-$sourceModal;
+$sourceModal,
+$buttonRefreshLocations;
 
 $(document).ready( init );
 
@@ -13,6 +14,7 @@ function init(){
     cacheDOM();
     bindEvents();
     initMap();
+    drawLocationsOnMap();
     initChart();
     initDatepickers();
 }
@@ -28,14 +30,17 @@ function cacheDOM() {
     $buttonAddSource = $('#button-add-source');
     $buttonOpenSourceModal = $('#button-open-source-modal');
     $sourceModal = $('#source-modal')
+    $buttonRefreshLocations = $('#button-refresh-locations')
 }
 
 function bindEvents() {
     $buttonFilter.on('click', handleButtonFilterClick);
     $buttonAddSource.on('click', handleButtonAddSourceClick)
-    $buttonOpenSourceModal.on('click', handleButtonTriggerSourceModal)
+    $buttonOpenSourceModal.on('click', handleButtonRefreshLocationsClick)
+    $buttonRefreshLocations.on('click', handleButtonRefreshLocationsClick)
 }
 
+// Handlers
 function handleButtonTriggerSourceModal() {
     $sourceModal.modal();
 }
@@ -69,6 +74,10 @@ function handleButtonFilterClick() {
     }
 }
 
+function handleButtonRefreshLocationsClick(){
+    drawLocationsOnMap();
+}
+
 
 function initMap() {
     // Init map
@@ -81,7 +90,10 @@ function initMap() {
         zoom: 13
     });
 
+    
+}
 
+function drawLocationsOnMap(){
     // Get Locations
     API.getLocations({}, function(locations) {
         for (let location of locations) {
