@@ -11,6 +11,9 @@ const getJSON = require('get-json')
 const interval = argv.interval || 60000;
 const debug = argv.debug || false;
 
+if(debug){
+	console.log('Debug mode: enabled');
+}
 
 // Models
 const Source = require("./models/source");
@@ -98,7 +101,6 @@ db.once('open', function() {
 				}
 				locations = filtered;
 			}
-
 
 			if(locations){
 				res.json({error: false, locations: locations})

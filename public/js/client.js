@@ -36,7 +36,7 @@ function cacheDOM() {
 function bindEvents() {
     $buttonFilter.on('click', handleButtonFilterClick);
     $buttonAddSource.on('click', handleButtonAddSourceClick)
-    $buttonOpenSourceModal.on('click', handleButtonRefreshLocationsClick)
+    $buttonOpenSourceModal.on('click', handleButtonTriggerSourceModal)
     $buttonRefreshLocations.on('click', handleButtonRefreshLocationsClick)
 }
 
