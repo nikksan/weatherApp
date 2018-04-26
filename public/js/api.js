@@ -12,7 +12,7 @@ var API = {
 					error(data.message);
 				}
 			},
-			error: function(){
+			error: function(err){
 				error(err.responseText);
 			}
 		})
@@ -29,7 +29,7 @@ var API = {
 					error(data.message);
 				}
 			},
-			error: function(){
+			error: function(err){
 				error(err.responseText);
 			}
 		})
@@ -47,7 +47,7 @@ var API = {
 					error(data.message);
 				}
 			},
-			error: function(){
+			error: function(err){
 				error(err.responseText);
 			}
 		})
@@ -66,7 +66,7 @@ var API = {
 					error(data.message);
 				}
 			},
-			error: function(){
+			error: function(err){
 				error(err.responseText);
 			}
 		})
@@ -84,7 +84,7 @@ var API = {
 					error(data.message);
 				}
 			},
-			error: function(){
+			error: function(err){
 				error(err.responseText);
 			}
 		})
@@ -102,7 +102,7 @@ var API = {
 					error(data.message);
 				}
 			},
-			error: function(){
+			error: function(err){
 				error(err.responseText);
 			}
 		})
@@ -120,7 +120,7 @@ var API = {
 					error(data.message);
 				}
 			},
-			error: function(){
+			error: function(err){
 				error(err.responseText);
 			}
 		})

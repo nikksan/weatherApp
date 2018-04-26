@@ -68,8 +68,8 @@ db.once('open', function() {
 			var latitudeOffset = req.query.filter.radius * 0.000001619593482036009;
 			var longitudeOffset = req.query.filter.radius * 0.000003239186964072018;
 
-			filter.latitude = { $gte: req.query.filter.latitude - latitudeOffset, $lte: praseFloat(req.query.filter.latitude) + latitudeOffset};
-			filter.longitude = { $gte: req.query.filter.longitude - longitudeOffset, $lte: praseFloat(req.query.filter.longitude) + longitudeOffset};
+			filter.latitude = { $gte: req.query.filter.latitude - latitudeOffset, $lte: parseFloat(req.query.filter.latitude) + latitudeOffset};
+			filter.longitude = { $gte: req.query.filter.longitude - longitudeOffset, $lte: parseFloat(req.query.filter.longitude) + longitudeOffset};
 		}
 
 		try{
