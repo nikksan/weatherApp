@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js --debug"
   },
   "author": "",
   "license": "ISC",
@@ -17,5 +17,8 @@
     "mongodb": "^3.0.4",
     "mongoose": "^5.0.12",
     "yargs": "^11.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.9"
   }
 }

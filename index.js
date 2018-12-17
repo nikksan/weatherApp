@@ -1,23 +1,23 @@
 const argv = require('yargs').argv;
 const mongoose = require('mongoose');
-const dbUrl = 'mongodb://localhost/weatherApp_v2';
+const dbUrl = 'mongodb://localhost/myWeatherApp';
 mongoose.connect(dbUrl);
 const db = mongoose.connection;
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser')
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || argv.port || 3000;
 const getJSON = require('get-json')
 const interval = argv.interval || 60000;
 const debug = argv.debug || false;
 
-if(debug){
-	console.log('Debug mode: enabled');
-}
-
 // Models
 const Source = require("./models/source");
 const Location = require("./models/location");
+
+if(debug){
+	console.log('Debug mode: enabled');
+}
 
 db.once('open', function() {
 	// Parser Setting
@@ -155,9 +155,7 @@ db.once('open', function() {
 			}
 		}
 
-		setTimeout(function(){
-			fetchLocationsLoop(debug)
-		}, interval);
+		setTimeout(fetchLocationsLoop, interval);
 	}
 
 
@@ -179,7 +177,7 @@ db.once('open', function() {
 		return new Promise(function(resolve, reject){
 			getJSON(url, function(err, data){
 				if(err){
-					return reject(err);
+					return reject(`Error parsing data from ${url}: ${err}`);
 				}
 
 				resolve(data);
@@ -188,9 +186,5 @@ db.once('open', function() {
 	}
 });
 
-
-
-db.on('error', function(err){
-	console.log(err);
-});
+db.on('error', console.error);
 
